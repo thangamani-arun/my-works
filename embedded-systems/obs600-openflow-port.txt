@@ -1,0 +1,107 @@
+Porting Ubuntu-8.04 on OpenBloacks 600 - powerpc platform
+----------------------------------------------------------
+
+Insert the Comfact Flash card and boot the obs600
+
+1. Assign IP address to eth0 to reach internet
+2. $ fdisk /dev/sda --Create a ext2/ext3 partition i.e. /dev/sda1
+3. $ mke2fs -j -b 4096 -L / /dev/sda1 --> Format the file system as ext2 with Label "/"
+4. $ mount LABEL=/ /mnt
+5. $ df -h --> Check whether mounted the CF card
+Filesystem            Size  Used Avail Use% Mounted on
+/dev/ram0             126M   33M   88M  27% /
+/dev/sda1              15G  129M   14G   1% /mnt
+
+6. $ cd /mnt
+7. $ ftp ftp://ftp.plathome.co.jp/pub/OBS600/misc/ubuntu/hardy-powerpc-obs600-20100813-00.tar.gz
+   $ tar --numeric-owner -xvpzf hardy-powerpc-obs600-20100813-00.tar.gz
+   $ rm -rf hardy-powerpc-obs600-20100813-00.tar.gz
+
+8. $ ftp ftp://ftp.plathome.co.jp/pub/OBS600/LATEST/powerpc-obs600/binary/kern.tgz
+9. $ tar zxvf kern.tgz
+10. $ find lib/modules/ -type f -name "*.ko.gz" | xargs gzip -d
+11. $ depmod -b /mnt -a
+12. $ rm -rf kern.tgz
+13. $ dd if=/dev/zero of=swap count=0 bs=1M seek=256
+14. $ mkswap swap
+
+Add sawp in the /etc/fstab file for auto swap fs mounting
+
+15. $ vi /etc/fstab
+	/swap swap swap defaults 0 0 
+16. $ flashcfg -c cf
+17. $ shutdown -r now
+
+After restarting the obs600 machine. Executhe following command
+
+18. $ depmod -a
+
+Now you are you can login into Ununtu Linux
+
+Login User name: root
+Password : root
+
+
+OpenFlow-0.8.9 porting on obs600
+--------------------------------
+
+Inorder port openflow-0.8.9 we need kernel headers. So installing kernel headers by following steps.
+
+Connect openblock to internet. You can get ip address using dhcp client
+
+$ dhclient eth0
+$ apt-get install build-essential libncurses5-dev wget 
+$ cd /usr/src
+$ wget http://www.kr.kernel.org/pub/linux/kernel/v2.6/linux-2.6.29.tar.bz2
+$ tar jxvf linux-2.6.29.tar.bz2
+$ ln -s linux-2.6.29 linux
+$ cd /root
+$ wget ftp://ftp.plathome.co.jp/pub/ssdlinux/0.5-LATEST/source/src.tgz 
+$ tar zxvf src.tgz
+$ cp /usr/src/linux/.config /usr/src/old.config
+$ cp /root/usr/src/mkdist/kernel/2.6.29/dot.config.powerpc-obs600 /usr/src/linux/.config
+
+Apply the patches for obs600 platform on linux kernel 2.6.29.
+
+$ cd /usr/src/linux-2.6.29
+$ patch -p1 < /root/usr/src/mkdist/kernel/2.6.29/patches/Makefile.patch 
+$ patch -p1 < /root/usr/src/mkdist/kernel/2.6.29/patches/arch_powerpc.patch
+$ patch -p1 < /root/usr/src/mkdist/kernel/2.6.29/patches/drivers_char.patch
+$ patch -p1 < /root/usr/src/mkdist/kernel/2.6.29/patches/drivers_usb.patch
+$ patch -p1 < /root/usr/src/mkdist/kernel/2.6.29/patches/drivers_char.patch
+$ patch -p1 < /root/usr/src/mkdist/kernel/2.6.29/patches/drivers_i2c.patch
+$ patch -p1 < /root/usr/src/mkdist/kernel/2.6.29/patches/drivers_net.patch
+$ patch -p1 < /root/usr/src/mkdist/kernel/2.6.29/patches/drivers_serial.patch
+$ patch -p1 < /root/usr/src/mkdist/kernel/2.6.29/patches/include_asm_generic.patch
+$ patch -p1 < /root/usr/src/mkdist/kernel/2.6.29/patches/include_linux.patch
+$ patch -p1 < /root/usr/src/mkdist/kernel/2.6.29/patches/init.patch
+$ patch -p1 < /root/usr/src/mkdist/kernel/2.6.29/patches/kernel.patch
+$ patch -p1 < /root/usr/src/mkdist/kernel/2.6.29/patches/scripts.patch
+
+Some of the pathces may fail. You have to manually apply.
+
+$ cd /usr/src/linux
+$ make menuconfig
+
+Save the configurations
+
+$ make
+
+This will take more time. Ait for successfull kernel compilatioon
+$ make headers_install
+
+
+Openflow-0.8.9-2 Compliation
+-----------------------------
+
+Go to optional directory for source compilation
+
+$ cd /opt
+$ wget http://openflowswitch.org/downloads/openflow-0.8.9~2.tar.gz
+$ tar zxvf openflow-0.8.9~2.tar.gz
+$ cd openflow-0.8.9~2
+$ ./configure --with-l26=/lib/modules/`uname -r/build
+or
+$ ./configure --with-l26=/lib/modules/2.6.29/build
+$ make
+
