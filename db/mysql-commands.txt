@@ -1,0 +1,284 @@
+MySql - Admin Commands
+++++++++++++++++++++++
+
+1. How to set MySQL Root password?
+# mysqladmin -u root password YOURNEWPASSWORD
+
+
+2. How to Change MySQL Root password?
+mysqladmin -u root -p123456 password 'xyz123'
+
+
+3. How to check MySQL Server is running?
+# mysqladmin -u root -p ping
+
+
+4. How to Check which MySQL version I am running?
+# mysqladmin -u root -p version
+
+
+5. How to Find out current Status of MySQL server?
+# mysqladmin -u root -ptmppassword status
+
+
+6. How to check status of all MySQL Server Variable’s and value’s?
+# mysqladmin -u root -p extended-status
+
+
+7. How to see all MySQL server Variables and Values?
+# mysqladmin  -u root -p variables
+
+
+8. How to check all the running Process of MySQL server?
+# mysqladmin -u root -p processlist
+
+
+9. How to create a Database in MySQL server?
+# mysqladmin -u root -p create databasename
+# mysql -u root -p
+mysql> show databases;
+
+
+10. How to drop a Database in MySQL server?
+# mysqladmin -u root -p drop databasename
+
+
+11. How to reload/refresh MySQL Privileges?
+# mysqladmin -u root -p reload;
+# mysqladmin -u root -p refresh
+
+
+12. How to shutdown MySQL server Safely?
+#mysqladmin -u root -p shutdown
+# /etc/init.d/mysqld stop
+# /etc/init.d/mysqld start
+
+
+13. Some useful MySQL Flush commands
+flush-hosts: Flush all host information from host cache.
+flush-tables: Flush all tables.
+flush-threads: Flush all threads cache.
+flush-logs: Flush all information logs.
+flush-privileges: Reload the grant tables (same as reload).
+flush-status: Clear status variables.
+
+# mysqladmin -u root -p flush-hosts
+# mysqladmin -u root -p flush-tables
+# mysqladmin -u root -p flush-threads
+# mysqladmin -u root -p flush-logs
+# mysqladmin -u root -p flush-privileges
+# mysqladmin -u root -p flush-status
+
+
+14. How to kill Sleeping MySQL Client Process?
+# mysqladmin -u root -p processlist
+# mysqladmin -u root -p kill 5
+# mysqladmin -u root -p kill 5,10
+
+
+15. How to run multiple mysqladmin commands together?
+# mysqladmin  -u root -p processlist status version
+
+
+16. How to Connect remote mysql server
+# mysqladmin  -h 172.16.25.126 -u root -p
+
+
+17. How to execute command on remote MySQL server
+# mysqladmin  -h 172.16.25.126 -u root -p status
+
+
+18. How to start/stop MySQL replication on a slave server?
+# mysqladmin  -u root -p start-slave
+# mysqladmin  -u root -p stop-slave
+
+
+19. How to store MySQL server Debug Information to logs?
+# mysqladmin  -u root -p debug
+
+
+20. How to view mysqladmin options and usage
+# mysqladmin --help
+
+Database Dump
+=============
+
+1. Db dump
+mysqldump -u username -p database > filename.sql
+mysqldump -u username -p database | /bin/gzip -9 > filename.sql.gz
+gunzip < [filename.sql.gz] | mysql -u [uname] -p[pass] [dbname]
+
+2. Table Dump
+mysqldump -u -p database_one table_name > /path/to/table_name.sql
+
+3. MySQL Database Restore. Restoring the table into another database
+mysql -u -p database_two < /path/to/table_name.sql
+
+shell> mysqldump [options] db_name [tbl_name ...]
+shell> mysqldump [options] --databases db_name ...
+shell> mysqldump [options] --all-databases
+
+4.Backup a local database and restore to remote server using single command
+# mysqldump -u root -ptmppassword sugarcrm | mysql -u root -ptmppassword --host=remote-server -C sugarcrm1
+
+5.How can i backup a table structure but NOT his data in MySQL
+
+to add to that, here's a backup script i wrote that dumps all mysql databases to plain text files, and creates separate dump files for each database's table schema and data (it's quite common to want to restore or create the tables on another mysql server WITHOUT the data, and that's a lot easier to do when you already have a small file with just the CREATE TABLE/CREATE INDEX etc commands)
+
+##############Script##############
+#! /bin/bash
+
+# backup-mysql.sh
+#
+# Craig Sanders <cas@taz.net.au>
+# this script is in the public domain.  do whatever you want with it.
+
+MYUSER="USERNAME"
+MYPWD="PASSWD"
+
+ARGS="--single-transaction --flush-logs --complete-insert"
+
+DATABASES=$( mysql -D mysql --skip-column-names -B -e 'show databases;' | egrep -v 'information_schema' );
+
+
+BACKUPDIR=/var/backups/mysql
+
+YEAR=$(date +"%Y")
+MONTH=$(date +"%m")
+DAY=$(date +"%d")
+
+DATE="$YEAR-$MONTH/$YEAR-$MONTH-$DAY"
+
+mkdir -p $BACKUPDIR/$DATE
+cd $BACKUPDIR/$DATE
+
+for i in $DATABASES ; do
+  echo -n "backing up $i: schema..."
+  mysqldump $ARGS --no-data -u$MYUSER -p$MYPWD $i > $i.schema.sql
+
+  echo -n "data..."
+  mysqldump $ARGS --skip-opt --no-create-db --no-create-info -u$MYUSER -p$MYPWD $i > $i.data.sql
+
+  echo -n "compressing..."
+  gzip -9fq $i.schema.sql $i.data.sql
+  echo "done."
+done
+
+# delete backup files older than 30 days
+OLD=$(find $BACKUPDIR -type d -mtime +30)
+if [ -n "$OLD" ] ; then
+        echo deleting old backup files: $OLD
+        echo $OLD | xargs rm -rfv
+fi
+##############Script##############
+
+
+Queries:
+
+Set/Change the password
+SET PASSWORD=PASSWORD('new_password')
+
+1.Create a db
+create database mydb;
+
+2.show dbs
+SHOW DATABASES
+
+3.Delete the DB
+drop database mydb;
+
+4.Use the db
+USE database_name
+
+5.Show tables
+show tables from mydb
+
+USE database_name
+
+5.Create a table
+CREATE TABLE table_name (create_clause1, create_clause2, ...)
+DESCRIBE table_name
+SHOW FIELDS FROM table_name
+SHOW COLUMNS FROM table_nam
+SHOW INDEX FROM table_name
+DROP TABLE table_name
+ALTER TABLE table_name ADD (create_clause1, create_clause2, ...)
+ 
+ALTER TABLE table_name DROP column_name
+ 
+ALTER TABLE table_name MODIFY create_clause
+     	
+ALTER TABLE table_name CHANGE column_name create_clause
+     	
+ALTER TABLE table_name ADD INDEX [index_name] (column_name1, column_name2, ...)
+
+CREATE INDEX index_name ON table_name (column_name1, column_name2, ...)
+
+INSERT [INTO] table_name VALUES (value1, value2, ...)
+ 
+INSERT [INTO] table_name (column_name1, column_name2, ...) VALUES (value1, value2, ...)
+
+INSERT [INTO] table_name SET column_name1=value1, column_name2=value2, ...
+
+INSERT [INTO] table_name (column_name1, column_name2, ...) SELECT list_of_fields_from_another_table FROM other_table_name WHERE where_clause
+
+ 
+DELETE FROM table_name WHERE where_clause
+
+UPDATE table_name SET column_name1=value1, column_name2=value2, ... [WHERE where_clause]
+ 
+LOAD DATA LOCAL INFILE 'path to external file' INTO TABLE table_name
+ 
+LOAD DATA LOCAL INFILE 'path to external file' [FIELDS TERMINATED BY 'termination_character'] [FIELDS ENCLOSED BY 'quoting character'] [LINES TERMINATED BY 'line termination character'] FROM table_name
+     
+SELECT column_name1, column_name2, ... INTO OUTFILE 'path to external file' [FIELDS TERMINATED BY 'termination_character'] [FIELDS ENCLOSED BY 'quoting character'] [LINES TERMINATED BY 'line termination character'] FROM table_name [WHERE where_clause]
+
+Privilege Commands
+==================
+
+GRANT USAGE ON *.* TO user_name@localhost [IDENTIFIED BY 'password']
+     	Creates a new user on MySQL, with no rights to do anything. The IDENTIFED BY clause creates or changes the MySQL password, which is not necessarily the same as the user's system password. The @localhost after the user name allows usage on the local system, which is usually what we do; leaving this off allows the user to access the database from another system. User name NOT in quotes.
+ 
+GRANT SELECT ON *.* TO user_name@localhost
+     	In general, unless data is supposed to be kept private, all users should be able to view it. A debatable point, and most databases will only grant SELECT privileges on particular databases. There is no way to grant privileges on all databses EXCEPT specifically enumerated ones.
+ 
+GRANT ALL ON database_name.* TO user_name@localhost
+     	Grants permissions on all tables for a specific database (database_name.*) to a user. Permissions are for: ALTER, CREATE, DELETE, DROP, INDEX, INSERT, SELECT, UPDATE.
+ 
+FLUSH PRIVILEGES
+     	Needed to get updated privileges to work immediately. You need RELOAD privileges to get this to work.
+ 
+SET PASSWORD=PASSWORD('new_password')
+     	Allows the user to set his/her own password.
+ 
+REVOKE ALL ON [database_name.]* FROM user_name@localhost
+     	Revokes all permissions for the user, but leaves the user in the MySQL database. This can be done for all databases using "ON *", or for all tables within a specific databse, using "ON database_name.*".
+ 
+DELETE FROM mysql.user WHERE user='user_name@localhost'
+     	Removes the user from the database, which revokes all privileges. Note that the user name is in quotes here.
+ 
+UPDATE mysql.user SET password=PASSWORD('my_password') WHERE user='user_name'
+     	Sets the user's password. The PASSWORD function encrypts it; otherwise it will be in plain text.
+ 
+SELECT user, host, password, select_priv, insert_priv, shutdown_priv, grant_priv FROM mysql.user
+     	A good view of all users and their approximate privileges. If there is a password, it will by an encrytped string; if not, this field is blank. Select is a very general privlege; insert allows table manipulation within a database; shutdown allows major system changes, and should only be usable by root; the ability to grant permissions is separate from the others.
+ 
+SELECT user, host, db, select_priv, insert_priv, grant_priv FROM mysql.db
+
+Ref: http://www.bios.niu.edu/johns/bioinform/mysql_commands.htm
+
+
+Recover MySQL root Password
+++++++++++++++++++++++++++++
+# /etc/init.d/mysql stop
+mysqld_safe --skip-grant-tables &
+mysql -u root
+mysql> use mysql;
+mysql> update user set password=PASSWORD("NEW-ROOT-PASSWORD") where User='root';
+mysql> flush privileges;
+mysql> quit
+/etc/init.d/mysql stop
+# /etc/init.d/mysql start
+# mysql -u root -p
+++++++++++++++++++++++++++++
+
