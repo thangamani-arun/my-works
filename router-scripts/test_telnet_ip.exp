@@ -1,0 +1,35 @@
+#!/usr/bin/expect -f
+ 
+set timeout 20
+ 
+# router user name
+set name "admin"
+ 
+# router password
+set pass "password"
+ 
+# router IP address
+set routerip "192.168.1.1"
+ 
+# Read command as arg to this script
+set routercmd [lindex $argv 0]
+ 
+# start telnet
+spawn telnet $routerip
+ 
+# send username &amp; password
+expect "Login:"
+send -- "$name\r"
+expect "Password:"
+send -- "$pass\r"
+ 
+# get out of ISP's  Stupid menu program, go to shell
+expect " -&gt; "
+#send --  "sh\r"
+send --  "ifconfig\r"
+ 
+# execute command
+expect "# "
+send -- "$routercmd\r"
+# exit
+send -- "^D"
