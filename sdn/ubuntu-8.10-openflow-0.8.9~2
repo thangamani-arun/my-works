@@ -1,0 +1,67 @@
+Kernel Compilation on Ubuntu-8.10 for Openflow kernel switch
+------------------------------------------------------------
+
+
+1. Kernel Compiliation
+-----------------------
+
+Install the essential 
+
+$ sudo apt-get install kernel-package kernel-wedge libncurses5-dev fakeroot wget bzip2 build-essential
+
+$ cd /usr/src
+$ sudo apt-get install linux-source 
+$ sudo tar jxvf linux-source-2.6.27.tar.bz2
+$ sudo ln -s linux-source-2.6.27 linux
+$ cd  /usr/src/linux
+$ sudo cp /boot/config-`uname -r` /usr/src/linux/.config
+
+Replace the dev.c with the patched dev.c inside the patch folder
+
+$ sudo make menuconfig
+
+Save the kernel configuration and exit the config window.
+
+$ sudo make-kpkg clean 
+$ sudo fakeroot make-kpkg --initrd --append-to-version=-ofsdebug kernel_image kernel_headers 
+
+After --append-to-version= you write a string that will help you keep track of your kernel changes, it must begin with a minus (-) and must not contain whitespace. 
+This will take a while. 
+
+If you get eror like below
+This results in the following error:
+dpkg-deb: control directory has bad permissions 2755 (must be >=0755 and <=0775)
+
+execute the following command
+
+$ sudo chmod -R a-s /usr/src
+
+After the successful kernel build, you can find two .deb packages in the /usr/src directory
+
+$ ls /usr/src/
+
+
+Install the kernel image and header 
+
+$ sudo dpkg -i /usr/src/*.deb
+
+$ sudo reboot
+
+It will boot from newly installed kernel.
+
+
+2. OpenFlow-0.8.9-2 Compliation
+-------------------------------
+
+$ cd /opt
+$ wget http://openflowswitch.org/downloads/openflow-0.8.9~2.tar.gz
+$ tar zxvf openflow-0.8.9~2.tar.gz
+$ cd openflow-0.8.9~2
+# copy patched files from the patch folder to the current directory
+$ sudo ./configure --with-l26=/lib/modules/`uname -r`/build
+$ sudo make clean
+$ sudo make
+
+
+
+
