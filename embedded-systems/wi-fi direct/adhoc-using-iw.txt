@@ -1,0 +1,88 @@
+
+Using IW
+============
+iw is a replacement tool for iwconfig.
+ad-hoc is nothing Independant Basic Service Set(IBSS).
+
+$ iw list | grep IBSS
+* IBSS --> It Means your Wifi-Adapter has ad-hoc mode support.
+
+The below setup tested on NEC's LifeTouch Tablet[Android V4.0.3]
+
+NODE-1
+------
+ifconfig wlan0 down
+iw wlan0 set type ibss OR iw dev wlan0 set type ibss
+ifconfig wlan0 10.0.0.1 up
+iw wlan0 ibss join arun-adhoc 2412 OR iw dev wlan0 ibss join arun-adhoc 2412
+
+NODE-2
+------
+ifconfig wlan0 down
+iw wlan0 set type ibss OR iw dev wlan0 set type ibss
+ifconfig wlan0 10.0.0.2 up
+iw wlan0 ibss join arun-adhoc 2412 OR iw dev wlan0 ibss join arun-adhoc 2412
+
+iw wlan0 info
+iw wlan0 link
+iw wlan0 ibss leave 
+
+2.4 GHz (802.11b/g/n) Band - Channels in IBSS Mode
+==================================================
+iw wlan0 ibss join arun-adhoc 2412 - ping success
+iw wlan0 ibss join arun-adhoc 2417 - ping success
+iw wlan0 ibss join arun-adhoc 2422 - ping success 
+iw wlan0 ibss join arun-adhoc 2427 - ping success
+iw wlan0 ibss join arun-adhoc 2432 - ping success
+iw wlan0 ibss join arun-adhoc 2437 - ping success
+iw wlan0 ibss join arun-adhoc 2442 - ping success
+iw wlan0 ibss join arun-adhoc 2447 - ping success
+iw wlan0 ibss join arun-adhoc 2452 - ping success
+iw wlan0 ibss join arun-adhoc 2457 - ping success
+iw wlan0 ibss join arun-adhoc 2462 - ping success
+iw wlan0 ibss join arun-adhoc 2467 - 1st time ping failed & 2nd time ping success
+iw wlan0 ibss join arun-adhoc 2472 - ping success
+iw wlan0 ibss join arun-adhoc 2484 - 1st time ping failed & 2nd/3rd time ping success
+
+3.6 GHz (802.11y) Band - Channels in IBSS Mode
+===============================================
+This range is documented as only being allowed as a licensed band in the United States
+
+
+4.9 GHz (802.11y) Band - Channels in IBSS Mode
+===============================================
+The U. S. Federal Communications Commission allocated 50MHz of spectrum from 4940MHz to 4990MHz for public safety radio services in 2003.
+50 MHz of spectrum from 4940 MHz to 4990 MHz (WLAN channels 20–26) are in use by public safety entities in the United States
+
+
+5 GHz (802.11a/h/j/n) Band - Channels in IBSS Mode
+==================================================
+channel-36 
+iw wlan0 ibss join arun-adhoc 5180 - ping success
+
+channel-38 [Client only]
+iw wlan0 ibss join arun-adhoc 5190 - ping success
+
+channel-40
+iw wlan0 ibss join arun-adhoc 5200 - ping success
+
+channel-42 [Client only]
+iw wlan0 ibss join arun-adhoc 5210 - ping success
+
+channel-44
+iw wlan0 ibss join arun-adhoc 5220 - ping success
+
+channel-46 [Client only]
+iw wlan0 ibss join arun-adhoc 5230 - ping success
+
+channel-48
+iw wlan0 ibss join arun-adhoc 5240 - ping success
+
+1) DFS Channels are not supported in IBSS mode
+2) Only 7 Channels[36, 38, 40, 42, 44, 46, 48] allowed in in IBSS mode at 5Ghz Band
+3) Channels[38 42, 46] are Client only in IBSS mode.
+
+Note:  Japan no longer allows 34, 38, 42, and 46 channels for connecting J52 supported old APs. Authorization to use these channels expired in May 2012.
+
+
+

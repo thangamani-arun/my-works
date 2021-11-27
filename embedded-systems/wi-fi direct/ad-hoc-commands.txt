@@ -1,0 +1,55 @@
+Pen AD-Hoc Network
+==================
+
+Linux HOST-1
+
+sudo /etc/init.d/network-manager stop
+sudo ifconfig wlan0 down
+sudo iwconfig wlan0 mode Ad-Hoc
+sudo iwconfig wlan0 essid "arun-adhoc"
+sudo iwconfig wlan0 channel 8 
+sudo ifconfig wlan0 10.0.0.1 up
+
+Linux HOST-2
+
+sudo /etc/init.d/network-manager stop
+sudo ifconfig wlan0 down
+sudo iwconfig wlan0 mode Ad-Hoc
+sudo iwconfig wlan0 essid "arun-adhoc"
+sudo iwconfig wlan0 channel 8
+sudo iwconfig wlan0 10.0.0.2 up
+
+
+Secured AD-Hoc Network
+======================
+
+Linux HOST-1
+
+sudo /etc/init.d/network-manager stop
+sudo ifconfig wlan0 down
+sudo iwconfig wlan0 mode Ad-Hoc
+sudo iwconfig wlan0 essid "arun-adhoc"
+sudo iwconfig wlan0 channel 8 
+sudo iwconfig wlan0 key 1234567890
+sudo ifconfig wlan0 10.0.0.1 up
+
+Linux HOST-2
+
+sudo /etc/init.d/network-manager stop
+sudo ifconfig wlan0 down
+sudo iwconfig wlan0 mode Ad-Hoc
+sudo iwconfig wlan0 essid "arun-adhoc"
+sudo iwconfig wlan0 channel 8
+sudo iwconfig wlan0 key 1234567890
+sudo iwconfig wlan0 10.0.0.2 up
+
+
+Note: Above setup worked on AcerTablet & NEC Laptop
+
+
+
+IW - Command - Usage
+====================
+
+
+

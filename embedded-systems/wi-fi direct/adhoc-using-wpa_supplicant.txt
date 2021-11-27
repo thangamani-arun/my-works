@@ -1,0 +1,131 @@
+
+Using WPA_SUPPLICANT
+========================
+
+$vi wpa_supplicant.conf
+
+#Conf-1 - Tested, Success
+
+# IBSS/ad-hoc network with WPA-None/TKIP.
+
+eapol_version=1
+ap_scan=1
+network={
+ ssid="arun-adhoc"
+ frequency=2412
+ proto=WPA
+ key_mgmt=WPA-NONE
+ pairwise=NONE
+ group=TKIP
+ mode=1
+ psk="1234567890"
+}
+
+
+#Conf-2 - Tested, Suceess
+
+#IBSS/ad-hoc network with no Key Management
+eapol_version=1
+ap_scan=1
+network={
+ ssid="arun-adhoc"
+ frequency= 2412
+ mode=1
+ key_mgmt=NONE
+}
+
+
+#Conf-3 Tested, Success
+
+eapol_version=1
+ap_scan=1
+fast_reauth=1
+network={
+  ssid="arun-adhoc"
+  frequency=2412
+  mode=1
+  key_mgmt=NONE
+  # Keys in quotes are ASCII keys
+  wep_key0="abcde"
+  # Keys specified without quotes are hex keys
+  wep_key1=0102030405
+  wep_key2="1234567890123"
+  wep_tx_keyidx=0
+  priority=1
+}
+
+
+
+$ wpa_supplicant -Dnl80211  -iwlan0 -c/data/local/arun-test/wpa_supplicant.conf -B
+$ iw wlan0 info 
+$ ifconfig wlan0 10.0.0.x up # Here x-1,2..etc is with respect to each terminal
+
+$ wpa_supplicant -Dnl80211  -iwlan0 -c/data/local/arun-test/wpa_supplicant_wep.conf -B
+$ iw wlan0 info 
+$ ifconfig wlan0 10.0.0.1 up 
+
+===========It does not work============================
+$ iw wlan0 ibss join <ssid> <freq> key d:0:<WEP key>
+# example:
+$ iw wlan0 ibss join arun-adhoc 2412 key d:0:1234567890
+===========It does not work============================
+##For android device
+service wpa_supplicant /system/bin/wpa_supplicant -Dnl80211 -iwlan0 -c/data/misc/wifi/wpa_supplicant.conf
+
+###########################################WEP######################################################
+# Static WEP keys
+
+ctrl_interface=/var/run/wpa_supplicant
+
+network={
+	ssid="example wep network"
+	key_mgmt=NONE
+	wep_key0="abcde"
+	wep_key1=0102030405
+	wep_tx_keyidx=0
+}
+###########################################WEP######################################################
+	   That's weird.  My working wpa_supplicant.conf doesn't have "wep_tx_keyidx"
+and has only one wep_key set:
+
+ 	network={
+ 		ssid="GoodNeighbour"
+ 		scan_ssid=1
+ 		key_mgmt=NONE
+ 		wep_key0="11111"
+ 	}
+
+   FWIW, "11111" is the first ASCII WEP key set in my test AP(Buffalo
+AirStation G54).  The rest(key 2 ~ 4) were simply empty strings in my AP's
+configuration.
+
+###########################################WEP######################################################
+# Shared WEP key connection (no WPA, no IEEE 802.1X)
+network={
+  ssid="static-wep-test"
+  key_mgmt=NONE
+  # Keys in quotes are ASCII keys
+  wep_key0="abcde"
+  # Keys specified without quotes are hex keys
+  wep_key1=0102030405
+  wep_key2="1234567890123"
+  wep_tx_keyidx=0
+  priority=5
+}
+
+# Shared WEP key connection (no WPA, no IEEE 802.1X) using Shared Key
+# IEEE 802.11 authentication
+network={
+  ssid="static-wep-test2"
+  key_mgmt=NONE
+  wep_key0="abcde"
+  wep_key1=0102030405
+  wep_key2="1234567890123"
+  wep_tx_keyidx=0
+  priority=5
+  auth_alg=SHARED
+}
+
+###########################################WEP######################################################
+###########################################WEP######################################################
+###########################################WEP######################################################

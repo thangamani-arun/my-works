@@ -1,0 +1,81 @@
+# mkdir /data/system/wpa_supplicant
+
+# mkdir /data/misc/wifi/
+
+# chown wifi.wifi /data/system/wpa_supplicant
+
+# chown wifi.wifi /data/misc/wifi/
+
+# mkdir /data/misc/wifi/sockets
+
+# chown wifi.wifi //data/misc/wifi/sockets
+
+# echo "ctrl_interface=DIR=/data/system/wpa_supplicant GROUP=wifi" > /data/misc/wifi/wpa_supplicant.conf
+
+# echo "update_config=1" >> /data/misc/wifi/wpa_supplicant.conf
+
+# echo "ap_scan=1" >> /data/misc/wifi/wpa_supplicant.conf
+
+#chown wifi.wifi /data/misc/wifi/wpa_supplicant.conf
+
+# insmod /system/modules/wl12xx_s* (Insert all the modules needed by wifi. Here ist iswl12xx_sdio.ko)
+
+# wpa_supplicant -Dwext -iwlan0 -c/data/misc/wifi/wpa_supplicant.conf -dd &
+
+
+
+Wifi Direct Using IW
+====================
+$ vi wpa_spplicant-p2p.conf
+
+c
+# If you need to modify the group owner intent, 0-15, the higher
+# number indicates preference to become the GO. You can also set
+# this on p2p_connect commands.
+#p2p_go_intent=15
+
+# optional, can be useful for monitoring, forces
+# wpa_supplicant to use only channel 1 rather than
+# 1, 6 and 11:
+#p2p_listen_reg_class=81
+#p2p_listen_channel=1
+#p2p_oper_reg_class=81
+#p2p_oper_channel=1
+
+
+
+# insmod /system/lib/modules/wl12xx_sdio.ko
+# mkdir /data/system/wpa_supplicant
+# chown wifi.wifi /data/system/wpa_supplicant
+
+# rm /data/system/wpa_supplicant/wlan0
+# rmdir /data/system/wpa_supplicant
+
+
+  P2P-GO & P2P-Client
+  ===================
+engg-build
+$ wpa_supplicant -iwlan0 -Dnl80211 -c /data/local/arun-test/p2p.conf -dd -B
+
+commercial -build
+$ wpa_supplicant -iwlan0 -Dnl80211 -c /data/local/tmp/p2p.conf -dd -B
+
+  P2P-GO
+  ======
+  wpa_cli  p2p_group_add freq=2412
+  
+  
+  P2P-Client
+  ==========
+  wpa_cli -iwlan0 p2p_find
+  wpa_cli -iwlan0 p2p_peers 	
+  wpa_cli p2p_connect 32:85:a9:2f:d3:c7 pbc go_intent=14 join freq=2412
+  
+  
+  P2P-GO
+  ======
+  wpa_cli  wps_pbc
+  
+ # 
+ # netcfg wlan0 dhcp
+
