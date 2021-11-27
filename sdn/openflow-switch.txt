@@ -1,0 +1,118 @@
+
+UBUNTU - 10.04 Lucid Lynx - Linux 2.6.32 kernel - Nox-0.6.0 - Openflowswitch -1.0.0
+------------------------------------------------------------------------------------
+
+Install Build Envirobnment And Dependency Packages
+---------------------------------------------------
+
+sudo apt-get install git git-core
+sudo apt-get install git
+sudo apt-get install git-core
+
+sudo apt-get install build-essential
+sudo apt-get install automake m4 libtool openssl libssl-dev 
+sudo apt-get install libboost-dev
+sudo apt-get install libboost-filesystem-dev
+sudo apt-get install libxerces-c3-dev
+sudo apt-get install python-dev
+sudo apt-get install libboost-thread1.40.0
+sudo apt-get install libboost-serialization-dev
+sudo apt-get install libsqlite3-dev
+sudo apt-get install libreadline-dev
+sudo apt-get install python-sphinx python-simplejson
+sudo apt-get install libboost-test1.40-dev
+
+
+Instruction To Install NOX
+------------------------------
+
+git clone git://noxrepo.org/nox
+mkdir build
+cd build
+../configure
+make 
+make check
+sudo make install
+
+
+Instruction To Install OpenFlowSwitch
+--------------------------------------
+
+git clone git://openflowswitch.org/openflow.git
+cd openflow
+./configure --enable-ssl=yes
+make 
+sudo make install
+
+
+TCP Mode
+----------
+
+cd ~/nox/build/src
+./nox_core -v -i ptcp: switch
+
+sudo ofdatapath -v punix:/var/run/dp0.soc -i eth0
+sudo ofprotocol -v unix:/var/run/dp0.soc tcp:192.168.0.163
+
+
+SSL Mode
+---------
+
+SSL Certificate Generation
+---------------------------
+sudo ofp-pki init --dir=/home/arun/cert ---> on switch machine
+
+scp -r /home/arun/cert/controllerca user@nox-ip~/noxca/ ---> From switch to nox machine
+
+sudo ./nox_core -v -i pssl:6633:/home/arun/cert/controllerca/private/cakey.pem:/home/arun/cert/controllerca/cacert.pem:/home/arun/cert/controllerca/cacert.pem switch
+
+sudo ofdatapath -v punix:/var/run/dp0.soc -i eth0
+
+sudo ofprotocol -v unix:/var/run/dp0.soc ssl:127.0.0.1 --private-key=/home/arun/cert/switchca/private/cakey.pem --certificate=/home/arun/cert/switchca/cacert.pem --ca-cert=/home/arun/cert/controllerca/cacert.pem
+
+
+Ethernet port setup on Switch Machine for end Hosts communication
+------------------------------------------------------------------
+
+sudo ifconfig eth0 up
+sudo ifconfig eth1 up
+sudo ifconfig eth2_rename hw ether 00:10:13:50:a3:53
+sudo ifconfig eth2_rename up
+
+
+Nox & Switch use SSL On Same Machine over TCP and SSL Mode
+----------------------------------------------------------
+
+sudo ofp-pki init --dir=/home/arun/cert
+
+sudo ./nox_core -v -i pssl:6633:/home/arun/cert/controllerca/private/cakey.pem:/home/arun/cert/controllerca/cacert.pem:/home/arun/cert/controllerca/cacert.pem switch
+
+sudo ofdatapath -v punix:/var/run/dp0.soc -i eth0,eth1,eth2_rename
+
+sudo ofprotocol -v unix:/var/run/dp0.soc ssl:192.168.0.163 --private-key=/home/arun/cert/switchca/private/cakey.pem --certificate=/home/arun/cert/switchca/cacert.pem --ca-cert=/home/arun/cert/controllerca/cacert.pem  
+
+
+Nox & Switch On Diff Machines over TCP and SSL Mode
+----------------------------------------------------
+
+sudo ofp-pki init --dir=/home/arun/cert ---> on switch machine
+
+scp -r /home/arun/cert/controllerca user@nox-ip:~/noxca/ ---From switch to nox machine
+
+sudo ./nox_core -v -i pssl:6633:/home/arun/noxca/controllerca/private/cakey.pem:/home/arun/noxca/controllerca/cacert.pem:/home/arun/noxca/controllerca/cacert.pem switch
+
+sudo ofdatapath -v punix:/var/run/dp0.soc -i eth0,eth1,eth2_rename 
+
+sudo ofprotocol -v unix:/var/run/dp0.soc ssl:192.168.0.163 --private-key=/home/openflowswitch/cert/switchca/private/cakey.pem --certificate=/home/openflowswitch/cert/switchca/cacert.pem --ca-cert=/home/openflowswitch/cert/controllerca/cacert.pem
+
+
+###################################################################################################################################################################
+28-may-2010
+
+sudo /etc/init.d/network-manager start
+sudo /etc/init.d/network-manager stop
+sudo ifconfig eth0 192.168.0.163 up
+
+./nox_core -v -i ptcp: switch >nox_core_tcp_log.txt 2>&1
+
+
