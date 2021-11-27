@@ -1,0 +1,206 @@
+Build FirefoxOS on Ubuntu 13.04 64-bit
+++++++++++++++++++++++++++++++++++++++
+
+1.Firefox OS build prerequisites
+
+sudo apt-get install android-tools-adb
+
+sudo apt-get install --no-install-recommends autoconf2.13 bison bzip2 ccache curl flex gawk gcc g++ g++-multilib gcc-4.6 g++-4.6 g++-4.6-multilib git ia32-libs lib32ncurses5-dev lib32z1-dev zlib1g:amd64 zlib1g-dev:amd64 zlib1g:i386 zlib1g-dev:i386 libgl1-mesa-dev libx11-dev make zip
+
+https://bitbucket.org/benjamin_dobell/heimdall/downloads
+
+dpkg -i ubuntu13.04-heimdall_1.4.0-0_amd64.deb
+dpkg -i ubuntu13.04-heimdall-frontend_1.4.0-0_amd64.deb
+
+ccache --max-size 3GB
+
+2.Preparing for your first Firefox OS build
+
+git clone git://github.com/mozilla-b2g/B2G.git
+
+cd B2G
+
+./config.sh
+
+OR
+
+./config.sh galaxy-nexus
+
+Configuring a build using a system backup
+
+If your phone no longer has Android on it, and your B2G tree doesn't have the binary blobs in it, but you wisely made a backup of the /system partition, you can perform the build on the system backup like this:
+
+ANDROIDFS_DIR=<absolute path to parent dir of system dir> ./config.sh <target>
+
+Configuring the B2G build for an emulator
+So, to build the ARM emulator, you would use the following command:
+
+./config.sh emulator
+
+Building against a custom Gecko
+
+There may be times that you want or need to build Boot to Gecko based on a different version of Gecko than the one that's used by default (as specified in the manifest). You can do so by editing the file .userconfig. For example, if you want to build against mozilla-central:
+
+export GECKO_PATH=/path/to/mozilla-central
+export GECKO_OBJDIR=/path/to/mozilla-central/objdir-gonk
+
+Building a branch
+BRANCH=branch-name ./config.sh <device>
+
+Copying your B2G tree to a new machine
+rsync -a source/ dest/
+
+Updating your B2G tree
+git fetch origin
+git checkout origin/master
+
+git show HEAD
+
+
+3. Building Firefox OS
+
+git pull
+./repo sync
+./repo sync gaia
+
+Building
+cd B2G
+./build.sh
+
+Building specific modules
+./build.sh gecko
+
+
+In order to refresh only one application, you can build only gaia module by using the BUILD_APP_NAME environment variable:
+
+BUILD_APP_NAME=calendar ./build.sh gaia
+
+To get a list of the modules you can build, you can do:
+./build.sh modules
+
+Setting the number of processor cores to use
+./build.sh -j2
+
+
+Building multilocale
+To create a multilocale build, do the following:
+Gaia
+
+    Determine which Gaia languages file to use. We're currently using locales/languages_dev.json and locales/languages_all.json as our Gaia languages files.
+    Clone the appropriate locales from http://hg.mozilla.org/gaia-l10n into a directory; we use gaia-l10n/ . You'll need to clone a repo for each locale listed in the languages file.
+    In your environment, set LOCALE_BASEDIR to the absolute path of the directory in step 2. Set LOCALES_FILE to the absolute path of the file in step 1.
+
+
+For instance,
+
+export LOCALE_BASEDIR=$PWD/gaia-l10n
+export LOCALES_FILE=$PWD/gecko/gaia/shared/resources/languages-dev.json
+
+Gecko
+
+    Determine which Gecko languages file to use. We're currently using b2g/locales/all-locales as our Gecko languages file.
+    Clone the appropriate locales into a directory; this can be gecko-l10n/ .
+        For mozilla-central, use http://hg.mozilla.org/l10n-central/
+        For mozilla-aurora, use http://hg.mozilla.org/releases/l10n/mozilla-aurora/
+        For mozilla-beta or mozilla-b2g18, use http://hg.mozilla.org/releases/l10n/mozilla-beta/
+    Clone compare-locales.
+
+    In your environment, set L10NBASEDIR to the absolute path of the directory in step 2. Set MOZ_CHROME_MULTILOCALE to a string of space-delimited locales from step 1.
+
+    Add the compare-locales/scripts dir to your PATH, and compare-locales/lib to your PYTHONPATH.
+    For instance,
+
+    export L10NBASEDIR=$PWD/gecko-l10n
+    export MOZ_CHROME_MULTILOCALE="ja zh-TW"
+    export PATH="$PATH:$PWD/compare-locales/scripts"
+    export PYTHONPATH="$PWD/compare-locales/lib"
+
+    Once you have the above set up, you can run build.sh.
+
+4.Porting Firefox OS
+
+Make sure to Set up your build system
+(1. Firefox OS build prerequisites)
+
+Create a local backup of the original Android system
+	mkdir my_device_backup
+	cd my_device_backup
+	adb pull /system system
+
+Clone the B2G repositories
+	git clone https://github.com/mozilla-b2g/B2G.git
+	git clone https://github.com/mozilla-b2g/b2g-manifest.git
+
+Add a new device to config.sh
+
+Create a manifest for the new device
+
+	git add my-new-device.xml
+	git commit
+
+GITREPO=${GITREPO:-"file:///home/yourname/b2g-manifest"}
+BRANCH=${BRANCH:-master}
+
+Create a configuration tree for the new device
+Create a new configuration tree for the new device. This should be at device/<manufacturer>/<device_id>. This tree should include, at least:
+
+    AndroidBoard.mk
+    AndroidProducts.mk
+    BoardConfig.mk
+    extract-files.sh
+    full_<device_id>.mk
+    idc files for touchscreen
+    init files (init.rc, init.<target>.rc, uevent.rc, ...)
+
+Rebuilt boot.img
+Changes to init.rc
+Import init.b2g.rc
+	on early-init
+    		start ueventd
+   	 	import /init.b2g.rc
+
+Fix permissions
+	chmod 0755 /system/b2g/b2g
+	chmod 0755 /system/b2g/updater
+	chmod 0755 /system/b2g/plugin-container
+
+TARGET_PROVIDES_INIT_RC in BoardConfig.mk.
+
+
+Prebuilt kernel vs. building the kernel from source
+
+Extracting and modifying an existing boot image
+	adb shell 'cat /dev/mtd/mtd1 > /sdcard/boot.img'
+	adb pull /sdcard/boot.img
+
+$ unmkbootimg boot.img
+
+To recompile this image, use:
+  mkbootimg --kernel zImage --ramdisk initramfs.cpio.gz --base 0x200000 --cmdline 'androidboot.hardware=aphone' -o new_boot.img
+
+
+To modify the ramdisk file create an output directory and extract it there:
+
+mkdir initramfs_dir
+cd initramfs_dir
+gunzip -c ../initramfs.cpio.gz | cpio -i
+
+
+/path/to/your/B2G/out/host/linux-x86/bin/mkbootfs . | gzip > ../newinitramfs.cpio.gz
+
+/path/to/your/B2G/out/host/linux-x86/bin/mkbootimg --kernel zImage --ramdisk newinitramfs.cpio.gz --base 0x200000 --cmdline 'androidboot.hardware=aphone' -o newboot.img
+
+adb reboot bootloader
+fastboot flash boot newboot.img
+fastboot reboot
+
+
+Add the new device to flash.sh
+
+Configure, build, and flash the new device
+ANDROIDFS_DIR=my_device_backup ./config.sh <device_id> '../b2g-manifest/default.xml'
+./build.sh
+./flash.sh
+
+Test and debug
+
